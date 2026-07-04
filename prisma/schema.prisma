@@ -1,0 +1,411 @@
+// PostgreSQL (Supabase) — unified content + event analytics
+// Rollups cho dashboard; raw events append-only (partition hook trong prisma/sql/)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Content ───────────────────────────────────────────────────────────────
+
+enum ContentType {
+  BLOG
+  AI_TOOL
+  DEV_TOOL
+  GAME
+  COMPARE
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum RenderStrategy {
+  SSG
+  ISR
+  SSR
+}
+
+enum LinkRelation {
+  RELATED
+  SEE_ALSO
+  COMPARE_TO
+  TOOL_FOR
+}
+
+enum IndexStatus {
+  PENDING
+  INDEXED
+  NOINDEX
+  ERROR
+}
+
+model Content {
+  id              String         @id @default(cuid())
+  type            ContentType
+  slug            String
+  title           String
+  excerpt         String?
+  body            String?
+  status          ContentStatus  @default(DRAFT)
+  renderStrategy  RenderStrategy @default(ISR)
+  revalidateSec   Int            @default(3600)
+
+  // SEO
+  seoTitle        String?
+  seoDescription  String?
+  focusKeyword    String?
+  keywords        String[]       @default([])
+  canonicalUrl    String?
+  ogImage         String?
+  schemaType      String?
+  sitemapPriority Float          @default(0.5)
+  sitemapChangefreq String         @default("weekly")
+
+  // Indexing state (sitemap / Search Console sync)
+  indexStatus     IndexStatus    @default(PENDING)
+  lastIndexedAt   DateTime?
+
+  metadata        Json           @default("{}")
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  outgoingLinks    ContentLink[]           @relation("SourceContent")
+  incomingLinks    ContentLink[]           @relation("TargetContent")
+  affiliateLinks   AffiliateLink[]
+  events           AnalyticsEvent[]
+  dailyStats       ContentDailyStat[]
+  performanceMetrics PagePerformanceMetric[]
+  chunks           ContentChunk[]
+
+  @@unique([type, slug])
+  @@index([type, status, publishedAt(sort: Desc)])
+  @@index([status, updatedAt(sort: Desc)])
+  @@index([indexStatus, type])
+  @@map("contents")
+}
+
+model ContentLink {
+  id         String       @id @default(cuid())
+  sourceId   String
+  targetId   String
+  relation   LinkRelation @default(RELATED)
+  anchorText String?
+  weight     Int          @default(1)
+  createdAt  DateTime     @default(now())
+
+  source Content @relation("SourceContent", fields: [sourceId], references: [id], onDelete: Cascade)
+  target Content @relation("TargetContent", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, relation])
+  @@index([targetId])
+  @@map("content_links")
+}
+
+// ─── AI Tool execution cache ─────────────────────────────────────────────────
+
+model ToolResultCache {
+  id        String   @id @default(cuid())
+  toolKey   String
+  inputHash String
+  output    String   @db.Text
+  model     String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@unique([toolKey, inputHash])
+  @@index([expiresAt])
+  @@map("tool_result_cache")
+}
+
+// ─── RAG / Vector search (pgvector + FTS) ────────────────────────────────────
+
+enum RagIngestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model ContentChunk {
+  id          String      @id @default(cuid())
+  contentId   String
+  chunkIndex  Int
+  chunkText   String      @db.Text
+  tokenCount  Int         @default(0)
+  contentType ContentType
+  slug        String
+  title       String
+  url         String
+  keywords    String[]    @default([])
+  section     String?
+  /// pgvector — enable extension via prisma/sql/pgvector_setup.sql
+  embedding   Unsupported("vector(1536)")?
+  /// Postgres FTS — populated on ingest
+  searchVector Unsupported("tsvector")?
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, chunkIndex])
+  @@index([contentType])
+  @@index([slug])
+  @@index([contentId])
+  @@map("content_chunks")
+}
+
+model RagIngestJob {
+  id          String          @id @default(cuid())
+  contentId   String?
+  status      RagIngestStatus @default(PENDING)
+  chunksTotal Int             @default(0)
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("rag_ingest_jobs")
+}
+
+// ─── Identity (optional auth via Supabase) ─────────────────────────────────
+
+model User {
+  id         String   @id // Supabase auth.users.id
+  email      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  visitors Visitor[]
+  events   AnalyticsEvent[]
+
+  @@map("users")
+}
+
+model Visitor {
+  id          String   @id // client-generated UUID, persisted in localStorage
+  userId      String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  user     User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessions VisitorSession[]
+  events   AnalyticsEvent[]
+
+  @@index([userId])
+  @@index([lastSeenAt(sort: Desc)])
+  @@map("visitors")
+}
+
+model VisitorSession {
+  id          String    @id // sessionStorage UUID
+  visitorId   String
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  entryPath   String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  deviceType  String?
+  country     String?
+
+  visitor Visitor          @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  events  AnalyticsEvent[]
+
+  @@index([visitorId, startedAt(sort: Desc)])
+  @@index([startedAt(sort: Desc)])
+  @@map("visitor_sessions")
+}
+
+// ─── Analytics events (hot path — partition by month at scale) ───────────────
+
+enum EventType {
+  PAGE_VIEW
+  SESSION_START
+  TOOL_USED
+  GAME_PLAYED
+  AFFILIATE_CLICK
+  AD_IMPRESSION
+  AD_CLICK
+  SCROLL_DEPTH
+  CONVERSION_EVENT
+  SEARCH
+}
+
+model AnalyticsEvent {
+  id              BigInt    @id @default(autoincrement())
+  eventType       EventType
+  sessionId       String
+  visitorId       String?
+  userId          String?
+  contentId       String?
+  affiliateLinkId String?
+  adPlacementId   String?
+  path            String?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+
+  session       VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  visitor       Visitor?        @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  content       Content?        @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  affiliateLink AffiliateLink?  @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+  adPlacement   AdPlacement?    @relation(fields: [adPlacementId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([contentId, eventType, createdAt(sort: Desc)])
+  @@index([sessionId, createdAt(sort: Desc)])
+  @@index([visitorId, createdAt(sort: Desc)])
+  @@index([affiliateLinkId, eventType, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("analytics_events")
+}
+
+// Pre-aggregated rollups — dashboard queries hit this, not raw events
+model ContentDailyStat {
+  id               String   @id @default(cuid())
+  contentId        String
+  date             DateTime @db.Date
+  pageViews        Int      @default(0)
+  uniqueVisitors   Int      @default(0)
+  sessionStarts    Int      @default(0)
+  toolUses         Int      @default(0)
+  gamePlays        Int      @default(0)
+  affiliateClicks  Int      @default(0)
+  adImpressions    Int      @default(0)
+  adClicks         Int      @default(0)
+  conversions      Int      @default(0)
+  avgScrollDepth   Float?
+  avgTimeOnPageSec Float?
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, date])
+  @@index([date(sort: Desc), pageViews(sort: Desc)])
+  @@map("content_daily_stats")
+}
+
+// ─── Affiliate ─────────────────────────────────────────────────────────────
+
+enum ConversionStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  REFUNDED
+}
+
+model AffiliateProgram {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  network   String?
+  metadata  Json     @default("{}")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  links AffiliateLink[]
+
+  @@map("affiliate_programs")
+}
+
+model AffiliateLink {
+  id          String   @id @default(cuid())
+  programId   String?
+  contentId   String?
+  label       String
+  destination String
+  trackingId  String   @unique
+  isActive    Boolean  @default(true)
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  program     AffiliateProgram?    @relation(fields: [programId], references: [id], onDelete: SetNull)
+  content     Content?             @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  events      AnalyticsEvent[]
+  conversions AffiliateConversion[]
+  dailyStats  AffiliateDailyStat[]
+
+  @@index([contentId])
+  @@index([programId, isActive])
+  @@map("affiliate_links")
+}
+
+model AffiliateConversion {
+  id                    String           @id @default(cuid())
+  affiliateLinkId       String
+  sessionId             String?
+  visitorId             String?
+  externalTransactionId String?          @unique
+  revenue               Decimal?         @db.Decimal(12, 2)
+  commission            Decimal?         @db.Decimal(12, 2)
+  currency              String           @default("USD")
+  status                ConversionStatus @default(PENDING)
+  convertedAt           DateTime         @default(now())
+  metadata              Json             @default("{}")
+
+  affiliateLink AffiliateLink @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateLinkId, convertedAt(sort: Desc)])
+  @@index([status, convertedAt(sort: Desc)])
+  @@map("affiliate_conversions")
+}
+
+model AffiliateDailyStat {
+  id              String   @id @default(cuid())
+  affiliateLinkId String
+  date            DateTime @db.Date
+  clicks          Int      @default(0)
+  conversions     Int      @default(0)
+  revenue         Decimal  @default(0) @db.Decimal(12, 2)
+
+  affiliateLink AffiliateLink @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+
+  @@unique([affiliateLinkId, date])
+  @@index([date(sort: Desc), clicks(sort: Desc)])
+  @@map("affiliate_daily_stats")
+}
+
+// ─── Ads ───────────────────────────────────────────────────────────────────
+
+model AdPlacement {
+  id        String   @id @default(cuid())
+  slotKey   String   @unique
+  provider  String
+  config    Json     @default("{}")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events AnalyticsEvent[]
+
+  @@map("ad_placements")
+}
+
+// ─── SEO performance (Core Web Vitals per page) ──────────────────────────────
+
+model PagePerformanceMetric {
+  id         String   @id @default(cuid())
+  contentId  String
+  sessionId  String?
+  lcpMs      Float?
+  fidMs      Float?
+  cls        Float?
+  ttfbMs     Float?
+  recordedAt DateTime @default(now())
+
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([contentId, recordedAt(sort: Desc)])
+  @@map("page_performance_metrics")
+}

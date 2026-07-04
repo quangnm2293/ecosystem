@@ -1,0 +1,50 @@
+---
+description: Chỉ dùng pnpm làm package manager — không dùng npm, yarn, bun
+alwaysApply: true
+---
+
+# Package manager: pnpm only
+
+Dự án này **chỉ dùng pnpm**. Không dùng npm, yarn, hoặc bun.
+
+## Lệnh đúng
+
+```bash
+pnpm install
+pnpm add <package>
+pnpm add -D <package>
+pnpm remove <package>
+pnpm run <script>
+pnpm exec <command>
+pnpm dlx <command>
+```
+
+## Không được dùng
+
+```bash
+# ❌ npm
+npm install
+npm run dev
+npx tsx ...
+
+# ❌ yarn
+yarn install
+yarn add ...
+yarn dlx ...
+
+# ❌ bun
+bun install
+bun run ...
+bunx ...
+```
+
+## Khi chạy lệnh trong terminal
+
+- Luôn dùng `pnpm` thay cho `npm`, `npx`, `yarn`, `yarn dlx`, `bun`, `bunx`.
+- Ví dụ: `pnpm exec tsx prisma/seed.ts` thay vì `npx tsx prisma/seed.ts`.
+- Nếu script trong `package.json` dùng `npx`, đề xuất đổi sang `pnpm exec` hoặc `pnpm dlx`.
+
+## Lockfile
+
+- Giữ và cập nhật `pnpm-lock.yaml`.
+- Không tạo hoặc commit `package-lock.json` hay `yarn.lock`.
