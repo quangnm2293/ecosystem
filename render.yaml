@@ -1,0 +1,28 @@
+# Render.com — free tier (web service sleep sau 15 phút không traffic)
+# Dashboard: New → Blueprint → connect repo → chọn file render.yaml
+services:
+  - type: web
+    name: ecosystem-platform
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: corepack enable && pnpm install && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: REVALIDATE_SECRET
+        generateValue: true
+      - key: RAG_INGEST_SECRET
+        generateValue: true
