@@ -35,6 +35,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 Chi tiết: <code className="break-all">{reason}</code>
               </p>
             )}
+            {reason?.toLowerCase().includes('invalid api key') && (
+              <p className="text-xs text-destructive/90">
+                → Trên <strong>Vercel</strong>, mở Settings → Environment Variables (Production).
+                Copy lại <code>NEXT_PUBLIC_SUPABASE_URL</code> và{' '}
+                <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> từ Supabase → Settings → API (key{' '}
+                <em>anon public</em>, không phải service_role). Redeploy sau khi lưu.
+                Kiểm tra: <code>/api/health/supabase</code>
+              </p>
+            )}
             <ul className="mt-2 list-inside list-disc text-xs text-muted-foreground">
               {SUPABASE_AUTH_CHECKLIST.slice(0, 4).map((item) => (
                 <li key={item}>{item}</li>

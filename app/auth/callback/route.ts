@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { buildAuthCallbackUrl, resolveAuthOrigin } from '@/lib/auth/oauth';
+import { getSupabasePublicConfig } from '@/lib/supabase/env';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -25,11 +26,9 @@ export async function GET(request: NextRequest) {
 
   const successUrl = `${origin}${next}`;
   const response = NextResponse.redirect(successUrl);
+  const { url, anonKey } = getSupabasePublicConfig();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const supabase = createServerClient(url, anonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
