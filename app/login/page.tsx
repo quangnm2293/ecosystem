@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { GoogleSignInButton } from '@/components/auth/auth';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { SUPABASE_AUTH_CHECKLIST } from '@/lib/auth/oauth';
 
 export const metadata = buildMetadata({
   title: 'Đăng nhập',
@@ -9,13 +10,14 @@ export const metadata = buildMetadata({
 });
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; reason?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const next = params.next?.startsWith('/') ? params.next : '/';
   const hasError = params.error === 'auth';
+  const reason = params.reason;
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-4 py-12">
@@ -26,9 +28,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
 
         {hasError && (
-          <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            Đăng nhập không thành công. Thử lại hoặc kiểm tra cấu hình Google OAuth trên Supabase.
-          </p>
+          <div className="mt-4 space-y-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p>Đăng nhập không thành công. Kiểm tra cấu hình Google OAuth trên Supabase.</p>
+            {reason && (
+              <p className="text-xs opacity-90">
+                Chi tiết: <code className="break-all">{reason}</code>
+              </p>
+            )}
+            <ul className="mt-2 list-inside list-disc text-xs text-muted-foreground">
+              {SUPABASE_AUTH_CHECKLIST.slice(0, 4).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
         )}
 
         <GoogleSignInButton next={next} className="mt-6" />

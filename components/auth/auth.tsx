@@ -7,6 +7,7 @@ import type { User } from '@supabase/supabase-js';
 import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { buildAuthCallbackUrl } from '@/lib/auth/oauth';
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -46,7 +47,9 @@ export function GoogleSignInButton({ next = '/', className }: GoogleSignInButton
 
     try {
       const supabase = createSupabaseBrowserClient();
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || window.location.origin;
+      const redirectTo = buildAuthCallbackUrl(siteUrl, next);
 
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
