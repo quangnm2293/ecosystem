@@ -1,12 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getSupabasePublicConfig } from '@/lib/supabase/env';
+import { tryGetSupabasePublicConfig } from '@/lib/supabase/env';
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-  const { url, anonKey } = getSupabasePublicConfig();
+  const config = tryGetSupabasePublicConfig();
+  if (!config) {
+    return NextResponse.next({ request });
+  }
 
-  const supabase = createServerClient(url, anonKey, {
+  let supabaseResponse = NextResponse.next({ request });
+
+  try {
+    const supabase = createServerClient(config.url, config.anonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -19,10 +24,12 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
-    },
-  );
+    });
 
-  await supabase.auth.getUser();
+    await supabase.auth.getUser();
+  } catch (err) {
+    console.error('[middleware] supabase session', err);
+  }
 
   return supabaseResponse;
 }

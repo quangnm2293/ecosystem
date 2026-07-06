@@ -48,6 +48,15 @@ export function getSupabasePublicConfig(): { url: string; anonKey: string } {
   return { url: getSupabaseUrl(), anonKey: getSupabaseAnonKey() };
 }
 
+/** Safe for middleware — không throw khi thiếu/sai env. */
+export function tryGetSupabasePublicConfig(): { url: string; anonKey: string } | null {
+  try {
+    return getSupabasePublicConfig();
+  } catch {
+    return null;
+  }
+}
+
 export async function probeSupabaseAuthHealth(): Promise<{
   ok: boolean;
   status: number;
