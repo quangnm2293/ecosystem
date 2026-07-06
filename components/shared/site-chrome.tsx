@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SITE_LOGO, SITE_NAME } from '@/lib/config/site';
 import { VERTICALS } from '@/lib/routing/verticals';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { AuthNav } from '@/components/auth/auth';
 
 export function Header() {
   return (
@@ -28,6 +29,7 @@ export function Header() {
             ))}
           </nav>
           <ThemeToggle />
+          <AuthNav />
         </div>
       </div>
     </header>

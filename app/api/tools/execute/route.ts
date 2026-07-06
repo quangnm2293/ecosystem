@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { executeTool } from '@/modules/ai-tools/engine/execute';
 
+/** Veo 3 polling có thể mất vài phút (đặc biệt khi extend video). */
+export const maxDuration = 600;
+
 const BodySchema = z.object({
   toolKey: z.string(),
   input: z.record(z.string(), z.string()),

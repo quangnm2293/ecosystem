@@ -1,4 +1,8 @@
 import type { AiToolDefinition } from '@/modules/ai-tools/types';
+import { executeUrlToVideo } from '@/modules/ai-tools/tools/url-to-video';
+import { executeTiktokVeoPrompt } from '@/modules/ai-tools/tools/tiktok-veo-prompt';
+import { SCENARIO_STYLE_OPTIONS } from '@/modules/ai-tools/veo/scenario-styles';
+import { TIKTOK_ANALYTICS_TOOLS } from '@/modules/tiktok-analytics/registry';
 
 const writingSeo = {
   howToUse: [
@@ -77,57 +81,100 @@ Include: compelling intro, 3-5 sections with H2 headings, conclusion with CTA.`,
 export const tiktokScriptTool: AiToolDefinition = {
   toolKey: 'tiktok-script',
   slug: 'ai-tiktok-script-generator',
-  name: 'AI TikTok Script Generator',
-  description: 'Tạo kịch bản TikTok/Reels hook mạnh, body ngắn và CTA trong 60 giây.',
+  name: 'TikTok → Veo 3 Prompt',
+  description:
+    'Dán link sản phẩm TikTok Shop — nhận 3–4 kịch bản video affiliate và prompt tiếng Anh sẵn sàng cho Google Veo 3.',
   category: 'social',
-  categoryLabel: 'Social Media',
+  categoryLabel: 'TikTok Shop',
   implemented: true,
   inputFields: [
-    { name: 'topic', label: 'Chủ đề video', type: 'text', placeholder: 'VD: 3 tip tiết kiệm tiền', required: true },
     {
-      name: 'style',
-      label: 'Phong cách',
+      name: 'productUrl',
+      label: 'Link sản phẩm TikTok Shop',
+      type: 'text',
+      placeholder: 'https://shop.tiktok.com/view/product/...',
+      required: true,
+    },
+    {
+      name: 'productHint',
+      label: 'Mô tả sản phẩm (nếu link không load)',
+      type: 'textarea',
+      placeholder:
+        'VD: Kính cường lực iPhone chống nhìn trộm, chống vân tay, cảm ứng nhạy — chỉ cần khi TikTok chặn bot',
+      required: false,
+      rows: 3,
+    },
+    {
+      name: 'language',
+      label: 'Ngôn ngữ voiceover / caption',
+      type: 'select',
+      required: false,
+      options: [
+        { label: 'Tiếng Việt', value: 'vi' },
+        { label: 'English', value: 'en' },
+      ],
+      defaultValue: 'vi',
+    },
+    {
+      name: 'focusStyle',
+      label: 'Phong cách ưu tiên (optional)',
+      type: 'select',
+      required: false,
+      options: [{ label: 'Đa dạng — hook + UGC (mặc định)', value: '' }, ...SCENARIO_STYLE_OPTIONS],
+      defaultValue: '',
+    },
+    {
+      name: 'scenarioCount',
+      label: 'Số kịch bản đề xuất',
       type: 'select',
       options: [
-        { label: 'Educational', value: 'educational' },
-        { label: 'Storytelling', value: 'storytelling' },
-        { label: 'Controversial hook', value: 'controversial' },
+        { label: '2 kịch bản', value: '2' },
+        { label: '3 kịch bản', value: '3' },
+        { label: '4 kịch bản', value: '4' },
       ],
-      defaultValue: 'educational',
+      defaultValue: '3',
     },
-    { name: 'duration', label: 'Thời lượng (giây)', type: 'number', defaultValue: '60', required: true },
   ],
   outputFormat: 'markdown',
-  model: 'gpt-4o-mini',
-  temperature: 0.8,
-  maxTokens: 1200,
+  model: 'groq',
+  temperature: 0.7,
+  maxTokens: 4096,
   affiliateTrackingId: 'demo-a',
-  affiliateCtaLabel: 'Thử CapCut Pro',
+  affiliateCtaLabel: 'Tạo video Veo 3 tự động',
+  affiliateCtaDescription: 'Dùng URL → Video để render MP4 9:16 từ cùng link sản phẩm.',
   seo: {
     howToUse: [
-      'Nhập chủ đề video và chọn phong cách hook.',
-      'Generate script với timestamp gợi ý.',
-      'Quay theo script và A/B test hook đầu video.',
+      'Dán link sản phẩm TikTok Shop hoặc trang landing affiliate.',
+      'Chọn ngôn ngữ và số kịch bản — mặc định gồm hook 3s (thu hút, tò mò, gây sốc…).',
+      'Copy prompt Veo 3 (tiếng Anh) hoặc chuyển sang URL → Video để render.',
     ],
     examples: [
       {
-        title: 'Video tip productivity',
-        input: { topic: 'Làm việc 4h/ngày hiệu quả', style: 'controversial', duration: '45' },
-        outputPreview: '**[0-3s HOOK]** Bạn đang lãng phí 4 tiếng mỗi ngày...',
+        title: 'Serum skincare TikTok Shop',
+        input: {
+          productUrl: 'https://www.tiktok.com/@shop/product/123',
+          language: 'vi',
+          scenarioCount: '3',
+        },
+        outputPreview:
+          '### UGC Review tự nhiên (8s)\n**Veo 3 prompt:** Vertical 9:16 TikTok Shop affiliate...',
       },
     ],
     faq: [
-      { q: 'Script dài bao nhiêu?', a: 'Tùy duration bạn chọn, thường 100-200 từ cho 60 giây.' },
+      {
+        q: 'Prompt Veo 3 dùng ở đâu?',
+        a: 'Copy vào Google AI Studio / Gemini API Veo, hoặc dùng công cụ URL → Video trên nền tảng này.',
+      },
+      {
+        q: 'Có cần API key không?',
+        a: 'Tạo kịch bản dùng Groq/Gemini free tier. Render video Veo 3 cần GEMINI_API_KEY (trả phí).',
+      },
     ],
   },
-  relatedToolKeys: ['blog-writer', 'image-prompt'],
-  systemPrompt: `You write viral short-form video scripts. Format in markdown with sections:
-HOOK (0-3s), BODY (with optional timestamps), CTA, ON-SCREEN TEXT suggestions.
-Write in Vietnamese. Keep punchy sentences.`,
-  buildUserPrompt: (input) =>
-    `Create a TikTok script for: "${input.topic}"
-Style: ${input.style}
-Target duration: ${input.duration} seconds`,
+  relatedToolKeys: ['url-to-video', 'tiktok-product-rank'],
+  systemPrompt: '',
+  buildUserPrompt: () => '',
+  customExecute: executeTiktokVeoPrompt,
 };
 
 export const imagePromptTool: AiToolDefinition = {
@@ -241,10 +288,159 @@ export const productDescriptionTool: AiToolDefinition = {
   buildUserPrompt: (input) => `Product: ${input.productName}\nFeatures: ${input.features}`,
 };
 
+export const urlToVideoTool: AiToolDefinition = {
+  toolKey: 'url-to-video',
+  slug: 'ai-url-to-video',
+  name: 'AI URL to Video — Affiliate',
+  description:
+    'Dán link sản phẩm → Groq/Gemini viết kịch bản + Veo 3 (Gemini API) tạo video TikTok affiliate MP4 có audio.',
+  category: 'affiliate',
+  categoryLabel: 'Affiliate',
+  implemented: true,
+  inputFields: [
+    {
+      name: 'productUrl',
+      label: 'Link sản phẩm',
+      type: 'text',
+      placeholder: 'https://www.tiktok.com/... hoặc trang sản phẩm',
+      required: true,
+    },
+    {
+      name: 'language',
+      label: 'Ngôn ngữ video',
+      type: 'select',
+      options: [
+        { label: 'Tiếng Việt', value: 'vi' },
+        { label: 'English', value: 'en' },
+        { label: 'ภาษาไทย', value: 'th' },
+        { label: 'Bahasa Indonesia', value: 'id' },
+      ],
+      defaultValue: 'vi',
+    },
+    {
+      name: 'veoModel',
+      label: 'Model Veo',
+      type: 'select',
+      options: [
+        { label: 'Veo 3.1 Fast — nhanh, rẻ (khuyên dùng)', value: 'fast' },
+        { label: 'Veo 3.1 Standard — chất lượng cao', value: 'standard' },
+      ],
+      defaultValue: 'fast',
+    },
+    {
+      name: 'veoOutput',
+      label: 'Độ dài video Veo',
+      type: 'select',
+      options: [
+        { label: '8 giây — 1 clip, không extend (nhanh nhất)', value: 'clip-8s' },
+        { label: 'Auto-extend theo thời lượng kịch bản', value: 'auto-extend' },
+      ],
+      defaultValue: 'clip-8s',
+    },
+    {
+      name: 'duration',
+      label: 'Thời lượng kịch bản (khi auto-extend)',
+      type: 'select',
+      options: [
+        { label: '15 giây', value: '15' },
+        { label: '30 giây', value: '30' },
+        { label: '60 giây', value: '60' },
+      ],
+      defaultValue: '30',
+    },
+    {
+      name: 'style',
+      label: 'Phong cách video',
+      type: 'select',
+      options: [
+        { label: 'UGC / Review tự nhiên', value: 'ugc-review' },
+        { label: 'Unboxing nhanh', value: 'unboxing' },
+        { label: 'Tutorial / How-to', value: 'tutorial' },
+        { label: 'So sánh / Before-After', value: 'comparison' },
+      ],
+      defaultValue: 'ugc-review',
+    },
+    {
+      name: 'targetAudience',
+      label: 'Đối tượng mục tiêu (tùy chọn)',
+      type: 'text',
+      placeholder: 'VD: Gen Z thích deal TikTok Shop',
+      required: false,
+    },
+    {
+      name: 'sellingPoints',
+      label: 'Điểm bán hàng (tùy chọn — AI tự trích nếu để trống)',
+      type: 'textarea',
+      rows: 3,
+      placeholder: 'VD: Giá rẻ, ship nhanh, bảo hành 12 tháng',
+      required: false,
+    },
+    {
+      name: 'affiliateNote',
+      label: 'Ghi chú affiliate / disclosure',
+      type: 'text',
+      placeholder: 'VD: Link Shopee affiliate, #quangcao',
+      required: false,
+    },
+  ],
+  outputFormat: 'markdown',
+  model: 'llama-3.3-70b-versatile',
+  provider: 'groq',
+  temperature: 0.75,
+  maxTokens: 4096,
+  affiliateTrackingId: 'demo-a',
+  affiliateCtaLabel: 'Nâng cấp hosting video',
+  affiliateCtaDescription: 'Deploy production để render video nhanh hơn với queue + CDN.',
+  seo: {
+    howToUse: [
+      'Dán link trang sản phẩm (TikTok Shop, Shopee, landing page affiliate).',
+      'Chọn model Veo (Fast/Standard) và clip 8s hoặc auto-extend.',
+      'Nhấn Tạo video — Veo 3 render MP4 9:16 có voiceover + nhạc nền.',
+    ],
+    examples: [
+      {
+        title: 'Sản phẩm TikTok Shop',
+        input: {
+          productUrl: 'https://example.com/product/serum',
+          language: 'vi',
+          duration: '30',
+          style: 'ugc-review',
+        },
+        outputPreview:
+          '## Điểm bán hàng cốt lõi\n1. Giảm mụn sau 7 ngày...\n\n## Kịch bản video (30s)\n| 0-3s | Hook... |',
+      },
+    ],
+    faq: [
+      {
+        q: 'Tool có render video file không?',
+        a: 'Có — dùng Google Veo 3 qua Gemini API. Mặc định: Veo Fast + clip 8s (1 lần gọi API). Chọn auto-extend để nối dài 15/30/60s.',
+      },
+      {
+        q: 'Veo Fast vs Standard?',
+        a: 'Fast (veo-3.1-fast-generate-preview): nhanh hơn, rẻ hơn. Standard: chất lượng cinematic cao hơn. Cấu hình mặc định qua VEO_MODEL trong .env.',
+      },
+      {
+        q: 'Dùng AI nào?',
+        a: 'Kịch bản: Groq (free) hoặc Gemini Flash. Video: Veo 3 — cần GEMINI_API_KEY paid preview.',
+      },
+      {
+        q: 'Link FastMoss / aggregator có được không?',
+        a: 'Có thể dùng nếu trang trả HTML công khai; nên dùng link sản phẩm trực tiếp để kết quả chính xác hơn.',
+      },
+    ],
+  },
+  relatedToolKeys: ['tiktok-script', 'product-description'],
+  systemPrompt: '',
+  buildUserPrompt: () => '',
+  customExecute: executeUrlToVideo,
+};
+
 export const ALL_AI_TOOLS = [
+  ...TIKTOK_ANALYTICS_TOOLS,
   blogWriterTool,
   tiktokScriptTool,
   imagePromptTool,
+  urlToVideoTool,
   resumeBuilderTool,
   productDescriptionTool,
 ] as const;

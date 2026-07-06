@@ -1,0 +1,65 @@
+---
+description: Ưu tiên shadcn/ui khi tạo UI; không có thì tạo component common dùng chung
+alwaysApply: true
+---
+
+# UI Components: shadcn first, common second
+
+## Thứ tự ưu tiên khi tạo feature mới
+
+1. **Tìm trong shadcn/ui trước** — xem component đã có trong `components/ui/` chưa
+2. **Chưa có → cài qua CLI** — `pnpm dlx shadcn@latest add <component> -y`
+3. **Shadcn không có / cần bọc logic** → tạo wrapper trong `components/common/`
+4. **Chỉ tạo component one-off** khi thật sự đặc thù 1 page/module (và ghi chú lý do)
+
+## Cấu trúc thư mục
+
+```
+components/
+  ui/          # shadcn primitives (KHÔNG sửa trực tiếp trừ khi cần thiết)
+  common/      # wrappers & composites dùng chung (PageHeader, EmptyState, …)
+  shared/      # site chrome (header, footer, theme)
+```
+
+## Quy tắc import
+
+```tsx
+// ✅ shadcn primitive
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// ✅ common wrapper (logic + composition)
+import { PageHeader } from '@/components/common/page-header';
+
+// ❌ không tạo button/input/card thủ công nếu shadcn đã có
+```
+
+## Khi nào tạo `components/common/`?
+
+- Bọc nhiều shadcn components thành pattern lặp lại (form field, dialog confirm, empty state)
+- Thêm logic app-specific (loading, error, i18n) trên shadcn base
+- Component dùng ở ≥ 2 nơi (tools, blog, compare, …)
+
+Đặt tên: `kebab-case.tsx`, export named component.
+
+## Cài component shadcn
+
+```bash
+pnpm dlx shadcn@latest add dialog dropdown-menu tabs -y
+```
+
+Danh sách: https://ui.shadcn.com/docs/components
+
+## Styling
+
+- Dùng design tokens trong `app/globals.css` (`--primary`, `--accent`, dark mode `html.dark`)
+- Compose với `cn()` từ `@/lib/utils`
+- Không hardcode màu zinc/gray — dùng semantic tokens hoặc shadcn variants
+
+## Checklist trước khi PR feature UI
+
+- [ ] Đã grep `components/ui/` và registry shadcn
+- [ ] Không duplicate component đã có trong `components/common/`
+- [ ] Client boundary đúng (`'use client'` chỉ khi cần)
+- [ ] Dark mode hoạt động (toggle header)

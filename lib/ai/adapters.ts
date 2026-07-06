@@ -1,5 +1,7 @@
 import type { AiProvider, AiMessage, AiCompletionOptions } from '@/lib/ai/provider';
 import { registerAiProvider } from '@/lib/ai/provider';
+import { geminiComplete, getGeminiModel } from '@/lib/ai/gemini';
+import { groqComplete, getGroqModel } from '@/lib/ai/groq';
 
 class OpenAiProvider implements AiProvider {
   name = 'openai';
@@ -34,6 +36,28 @@ class OpenAiProvider implements AiProvider {
   }
 }
 
+class GroqProvider implements AiProvider {
+  name = 'groq';
+
+  async complete(messages: AiMessage[], options?: AiCompletionOptions): Promise<string> {
+    return groqComplete(messages, {
+      ...options,
+      model: options?.model ?? getGroqModel(),
+    });
+  }
+}
+
+class GeminiProvider implements AiProvider {
+  name = 'gemini';
+
+  async complete(messages: AiMessage[], options?: AiCompletionOptions): Promise<string> {
+    return geminiComplete(messages, {
+      ...options,
+      model: options?.model ?? getGeminiModel(),
+    });
+  }
+}
+
 class MockAiProvider implements AiProvider {
   name = 'mock';
 
@@ -41,8 +65,11 @@ class MockAiProvider implements AiProvider {
     const user = [...messages].reverse().find((m) => m.role === 'user')?.content ?? '';
     await new Promise((r) => setTimeout(r, 800));
 
-    if (user.includes('TikTok') || user.includes('script')) {
+    if (user.includes('TikTok') || user.includes('script') || user.includes('Kịch bản video')) {
       return `**[0-3s HOOK]** Bạn có biết 80% creator bỏ cuộc vì thiếu script?\n\n**[3-20s BODY]**\n${user.slice(0, 120)}...\n\n**[CTA]** Follow để nhận thêm template miễn phí.\n\n**ON-SCREEN:** "Save this 📌"`;
+    }
+    if (user.includes('URL:') && user.includes('sản phẩm')) {
+      return `## Thông tin sản phẩm\n\n- Demo affiliate video package\n\n## Điểm bán hàng cốt lõi\n\n1. Hook mạnh\n2. Demo sản phẩm\n3. CTA affiliate\n\n_Cấu hình GEMINI_API_KEY để generate đầy đủ._`;
     }
     if (user.includes('Platform:') || user.includes('Subject:')) {
       return `${user.match(/Subject: (.+)/)?.[1] ?? 'subject'}, highly detailed, cinematic lighting, 8k, sharp focus, professional photography`;
@@ -53,12 +80,23 @@ class MockAiProvider implements AiProvider {
 
 registerAiProvider(new MockAiProvider());
 
+if (process.env.GEMINI_API_KEY) {
+  registerAiProvider(new GeminiProvider());
+}
+
+if (process.env.GROQ_API_KEY) {
+  registerAiProvider(new GroqProvider());
+}
+
 if (process.env.OPENAI_API_KEY) {
   registerAiProvider(new OpenAiProvider());
 }
 
-/** Resolve provider: openai if key exists, else mock */
+/** Resolve provider: explicit env > gemini > openai > mock */
 export function resolveAiProviderName(): string {
-  if (process.env.AI_PROVIDER === 'openai' || process.env.OPENAI_API_KEY) return 'openai';
+  if (process.env.AI_PROVIDER) return process.env.AI_PROVIDER;
+  if (process.env.GROQ_API_KEY) return 'groq';
+  if (process.env.GEMINI_API_KEY) return 'gemini';
+  if (process.env.OPENAI_API_KEY) return 'openai';
   return 'mock';
 }

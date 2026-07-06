@@ -4,6 +4,7 @@ export type AiCompletionOptions = {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  jsonMode?: boolean;
 };
 
 export type AiProvider = {
@@ -21,7 +22,13 @@ export function getAiProvider(name?: string): AiProvider {
   const resolved =
     name ??
     process.env.AI_PROVIDER ??
-    (process.env.OPENAI_API_KEY ? 'openai' : 'mock');
+    (process.env.GROQ_API_KEY
+      ? 'groq'
+      : process.env.GEMINI_API_KEY
+        ? 'gemini'
+        : process.env.OPENAI_API_KEY
+          ? 'openai'
+          : 'mock');
   const provider = providers[resolved];
   if (!provider) throw new Error(`Unknown AI provider: ${resolved}. Import @/lib/ai/adapters`);
   return provider;

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -9,23 +11,44 @@
   --surface: #ffffff;
   --surface-muted: #e8f0fe;
   --card: #ffffff;
+  --card-foreground: #0c2340;
+  --popover: #ffffff;
+  --popover-foreground: #0c2340;
   --input: #ffffff;
   --border: #b8cfe8;
   --border-muted: #d4e4f7;
   --primary: #1565c0;
   --primary-hover: #0d47a1;
   --primary-foreground: #ffffff;
+  --secondary: #e8f0fe;
+  --secondary-foreground: #0c2340;
   --accent: #f5b800;
   --accent-hover: #e6a800;
   --accent-foreground: #1a1200;
   --muted: #5a7a9e;
   --muted-foreground: #3d5a78;
+  --destructive: #dc2626;
   --danger: #dc2626;
+  --ring: #1565c0;
   --header-bg: #1565c0;
   --header-fg: #ffffff;
   --header-muted: #bbdefb;
   --gradient-from: #1565c0;
   --gradient-to: #f5b800;
+  --chart-1: #1565c0;
+  --chart-2: #f5b800;
+  --chart-3: #64b5f6;
+  --chart-4: #0d47a1;
+  --chart-5: #ffca28;
+  --radius: 0.625rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0c2340;
+  --sidebar-primary: #1565c0;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f0fe;
+  --sidebar-accent-foreground: #0c2340;
+  --sidebar-border: #b8cfe8;
+  --sidebar-ring: #1565c0;
 }
 
 /* ── Dark theme ── */
@@ -35,23 +58,43 @@ html.dark {
   --surface: #122240;
   --surface-muted: #1a3055;
   --card: #152a4a;
+  --card-foreground: #e8f2ff;
+  --popover: #152a4a;
+  --popover-foreground: #e8f2ff;
   --input: #1a3055;
   --border: #2a4470;
   --border-muted: #1e3560;
   --primary: #64b5f6;
   --primary-hover: #90caf9;
   --primary-foreground: #0a1628;
+  --secondary: #1a3055;
+  --secondary-foreground: #e8f2ff;
   --accent: #ffca28;
   --accent-hover: #ffd54f;
   --accent-foreground: #1a1200;
   --muted: #8ba4c4;
   --muted-foreground: #a8bdd4;
+  --destructive: #f87171;
   --danger: #f87171;
+  --ring: #64b5f6;
   --header-bg: #0d1f3c;
   --header-fg: #e8f2ff;
   --header-muted: #8ba4c4;
   --gradient-from: #1565c0;
   --gradient-to: #ffca28;
+  --chart-1: #64b5f6;
+  --chart-2: #ffca28;
+  --chart-3: #1565c0;
+  --chart-4: #90caf9;
+  --chart-5: #ffd54f;
+  --sidebar: #122240;
+  --sidebar-foreground: #e8f2ff;
+  --sidebar-primary: #64b5f6;
+  --sidebar-primary-foreground: #0a1628;
+  --sidebar-accent: #1a3055;
+  --sidebar-accent-foreground: #e8f2ff;
+  --sidebar-border: #2a4470;
+  --sidebar-ring: #64b5f6;
 }
 
 @theme inline {
@@ -77,6 +120,34 @@ html.dark {
   --color-header-muted: var(--header-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 html,
@@ -343,5 +414,17 @@ body {
   .group:hover .vertical-card-icon {
     background-color: var(--accent);
     color: var(--accent-foreground);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }

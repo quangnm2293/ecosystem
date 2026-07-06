@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import type { AiToolPublic } from '@/modules/ai-tools/types';
+import type { AiToolPublic, ToolStructuredResult } from '@/modules/ai-tools/types';
 import { DynamicForm } from '@/modules/ai-tools/components/DynamicForm';
 import { AdPlaceholder } from '@/modules/ai-tools/components/AdPlaceholder';
+import { ToolResultView } from '@/modules/ai-tools/components/ToolResultView';
 import { affiliateRedirectUrl } from '@/lib/affiliate/service';
 
 type ToolRunnerProps = {
@@ -45,13 +46,15 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
   const initialValues = useMemo(() => {
     const v: Record<string, string> = {};
     for (const f of tool.inputFields) {
-      if (f.defaultValue) v[f.name] = f.defaultValue;
+      if (f.defaultValue !== undefined) v[f.name] = f.defaultValue;
     }
     return v;
   }, [tool.inputFields]);
 
   const [values, setValues] = useState(initialValues);
   const [output, setOutput] = useState<string | null>(null);
+  const [structured, setStructured] = useState<ToolStructuredResult | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);
@@ -89,6 +92,8 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
     if (!tool.implemented) return;
     setLoading(true);
     setError(null);
+    setVideoUrl(null);
+    setStructured(null);
 
     try {
       const res = await fetch('/api/tools/execute', {
@@ -96,7 +101,7 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           toolKey: tool.toolKey,
-          input: values,
+          input: { ...initialValues, ...values },
           sessionId: getSessionId(),
           visitorId: getVisitorId(),
           contentId,
@@ -107,6 +112,8 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
       if (!res.ok) throw new Error(data.error ?? 'Generate failed');
 
       setOutput(data.output);
+      setVideoUrl(data.videoUrl ?? null);
+      setStructured(data.structured ?? null);
       setCached(data.cached);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
@@ -140,7 +147,21 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
           disabled={loading}
           className="ui-btn-primary mt-6 w-full sm:w-auto"
         >
-          {loading ? 'Đang generate…' : 'Generate'}
+          {loading
+            ? tool.category === 'tiktok-shop'
+              ? 'Đang phân tích…'
+              : tool.toolKey === 'url-to-video'
+                ? 'Đang tạo video…'
+                : tool.toolKey === 'tiktok-script'
+                  ? 'Đang tạo kịch bản…'
+                  : 'Đang generate…'
+            : tool.category === 'tiktok-shop'
+              ? 'Phân tích'
+              : tool.toolKey === 'url-to-video'
+                ? 'Tạo video'
+                : tool.toolKey === 'tiktok-script'
+                  ? 'Tạo kịch bản Veo 3'
+                  : 'Generate'}
         </button>
 
         {error && <p className="mt-4 text-sm text-danger">{error}</p>}
@@ -148,21 +169,36 @@ export function ToolRunner({ tool, contentId }: ToolRunnerProps) {
 
       <AdPlaceholder slotKey="tool-middle" />
 
-      {output && (
+      {(output || videoUrl || structured) && (
         <div className="ui-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-border-muted bg-surface-muted px-6 py-3">
             <span className="text-sm font-medium text-foreground">
               Kết quả {cached && <span className="text-muted">(cached)</span>}
             </span>
-            <button type="button" onClick={onCopy} className="ui-btn-ghost">
-              Copy
-            </button>
+            {output && (
+              <button type="button" onClick={onCopy} className="ui-btn-ghost">
+                {structured ? 'Copy bảng' : 'Copy script'}
+              </button>
+            )}
           </div>
-          <div className="max-h-120 overflow-auto p-6">
-            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-              {output}
-            </pre>
-          </div>
+
+          {videoUrl && (
+            <div className="border-b border-border-muted bg-black p-4">
+              <video
+                src={videoUrl}
+                controls
+                playsInline
+                className="mx-auto max-h-[min(70vh,640px)] w-full max-w-sm rounded-lg"
+              />
+              <div className="mt-3 flex flex-wrap gap-3">
+                <a href={videoUrl} download className="ui-btn-accent text-sm">
+                  Tải MP4
+                </a>
+              </div>
+            </div>
+          )}
+
+          <ToolResultView structured={structured} output={structured ? null : output} />
 
           <AdPlaceholder slotKey="tool-result" className="mx-6 mb-6" />
 

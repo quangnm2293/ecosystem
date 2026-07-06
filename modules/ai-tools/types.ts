@@ -63,13 +63,94 @@ export type AiToolDefinition = Omit<AiToolMetadata, 'inputFields'> & {
   systemPrompt: string;
   buildUserPrompt: (input: Record<string, string>) => string;
   implemented: boolean;
+  /** Override default AI provider (openai | gemini | mock) */
+  provider?: string;
+  /** Custom server-side executor — bypasses generic prompt → LLM flow */
+  customExecute?: (input: Record<string, string>) => Promise<string | ToolCustomResult>;
+};
+
+export type ToolStructuredResult =
+  | {
+      kind: 'tiktok-product-rank';
+      source: string;
+      fetchedAt: string;
+      note?: string;
+      items: {
+        rank: number;
+        title: string;
+        category?: string;
+        price?: string;
+        sales7d?: string;
+        revenue7d?: string;
+        growth?: string;
+        shopName?: string;
+        imageUrl?: string;
+        productUrl?: string;
+        commissionPercent?: string;
+      }[];
+    }
+  | {
+      kind: 'veo-prompt-scripts';
+      productTitle: string;
+      productUrl: string;
+      imageUrl?: string;
+      price?: string;
+      sellingPoints: string[];
+      productInsights?: {
+        productSummary: string;
+        category?: string;
+        targetAudience?: string;
+        painPoints: string[];
+        benefits: string[];
+        uniqueSellingPoints: string[];
+        keywords?: string[];
+        hookAngles: {
+          angle: string;
+          rationale: string;
+          sampleHook: string;
+        }[];
+      };
+      scenarios: {
+        id: string;
+        title: string;
+        style: string;
+        durationSec: 4 | 6 | 8;
+        hook: string;
+        scenes: {
+          durationSec: number;
+          visual: string;
+          voiceover?: string;
+          onScreenText?: string;
+        }[];
+        veoPrompt: string;
+        caption: string;
+        hashtags: string[];
+        cta?: string;
+      }[];
+      veoTips?: string[];
+    };
+
+export type ToolCustomResult = {
+  output: string;
+  videoUrl?: string;
+  model?: string;
+  structured?: ToolStructuredResult;
 };
 
 /** Serializable subset safe to pass into Client Components */
-export type AiToolPublic = Omit<AiToolDefinition, 'systemPrompt' | 'buildUserPrompt'>;
+export type AiToolPublic = Omit<
+  AiToolDefinition,
+  'systemPrompt' | 'buildUserPrompt' | 'customExecute' | 'provider'
+>;
 
 export function toPublicTool(tool: AiToolDefinition): AiToolPublic {
-  const { systemPrompt: _systemPrompt, buildUserPrompt: _buildUserPrompt, ...publicTool } = tool;
+  const {
+    systemPrompt: _systemPrompt,
+    buildUserPrompt: _buildUserPrompt,
+    customExecute: _customExecute,
+    provider: _provider,
+    ...publicTool
+  } = tool;
   return publicTool;
 }
 
@@ -85,4 +166,6 @@ export type ToolExecuteResponse = {
   output: string;
   cached: boolean;
   model: string;
+  videoUrl?: string;
+  structured?: ToolStructuredResult;
 };

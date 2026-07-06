@@ -39,6 +39,13 @@ export default async function ToolsIndexPage() {
         {implemented} công cụ sẵn sàng · Miễn phí · SEO-optimized
       </p>
 
+      <Link href="/tools/tiktok-shop" className="ui-link-card mt-6 block border-primary/30 bg-primary/5">
+        <span className="font-semibold text-primary">TikTok Shop Analytics (FastMoss-like)</span>
+        <p className="mt-1 text-sm text-muted-foreground">
+          9 công cụ phân tích: sản phẩm bán chạy, KOL, livestream, quảng cáo, VOC…
+        </p>
+      </Link>
+
       {Object.entries(byCategory).map(([category, tools]) => (
         <section key={category} className="mt-10">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">{category}</h2>
