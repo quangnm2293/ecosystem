@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "pnpm exec tsx prisma/seed.ts",
+    "db:seed": "pnpm run supabase:seed",
     "rag:ingest": "pnpm exec tsx scripts/rag-ingest.ts",
     "supabase:seed": "pnpm exec tsx scripts/supabase-seed.ts",
     "deploy:check": "bash scripts/deploy-check.sh"
