@@ -61,16 +61,18 @@ export const AD_PLACEMENTS = {
 
 export type AdPlacementKey = keyof typeof AD_PLACEMENTS;
 
+/** Publisher ID công khai — dùng fallback khi env chưa set (AdSense verification). */
+export const ADSENSE_CLIENT_ID_DEFAULT = 'ca-pub-4584547376616809';
+
 export function isAdSenseEnabled(): boolean {
   if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED === 'false') return false;
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-  return Boolean(client?.startsWith('ca-pub-'));
+  return Boolean(getAdSenseClientId());
 }
 
 export function getAdSenseClientId(): string | null {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-  if (!client?.startsWith('ca-pub-')) return null;
-  return client;
+  if (client?.startsWith('ca-pub-')) return client;
+  return ADSENSE_CLIENT_ID_DEFAULT;
 }
 
 export function getAdSenseSlotId(placement: AdPlacementKey): string | null {

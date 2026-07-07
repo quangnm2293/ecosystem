@@ -1,15 +1,19 @@
 import { getAdSenseClientId, isAdSenseEnabled } from '@/lib/ads/config';
 
-/** Google AdSense — đặt trong <head> theo hướng dẫn AdSense. */
+/** Google AdSense — script + meta trong <head> (verification crawler). */
 export function AdSenseHeadScript() {
-  const clientId = getAdSenseClientId();
-  if (!isAdSenseEnabled() || !clientId) return null;
+  if (!isAdSenseEnabled()) return null;
+
+  const clientId = getAdSenseClientId()!;
 
   return (
-    <script
-      async
-      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
-      crossOrigin="anonymous"
-    />
+    <>
+      <meta name="google-adsense-account" content={clientId} />
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
+        crossOrigin="anonymous"
+      />
+    </>
   );
 }
