@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { AdSenseScript } from '@/components/ads/AdSenseScript';
+import { AdSenseHeadScript } from '@/components/ads/AdSenseScript';
 import { Header, Footer } from '@/components/shared/site-chrome';
 import { SITE_NAME } from '@/lib/config/site';
 import './globals.css';
@@ -26,9 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <AdSenseHeadScript />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <AdSenseScript />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

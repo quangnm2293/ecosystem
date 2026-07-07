@@ -1,18 +1,15 @@
-import Script from 'next/script';
 import { getAdSenseClientId, isAdSenseEnabled } from '@/lib/ads/config';
 
-/** Load Google AdSense một lần — đặt trong root layout. */
-export function AdSenseScript() {
+/** Google AdSense — đặt trong <head> theo hướng dẫn AdSense. */
+export function AdSenseHeadScript() {
   const clientId = getAdSenseClientId();
   if (!isAdSenseEnabled() || !clientId) return null;
 
   return (
-    <Script
-      id="adsense-script"
+    <script
       async
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
       crossOrigin="anonymous"
-      strategy="afterInteractive"
     />
   );
 }
