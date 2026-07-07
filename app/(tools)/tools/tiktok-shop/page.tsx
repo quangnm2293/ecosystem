@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { buildMetadata } from '@/lib/seo/metadata';
 import {
   FASTMOSS_FEATURE_MAP,
@@ -46,6 +47,8 @@ export default function TikTokShopHubPage() {
         </a>
         , fallback crawl + AI.
       </p>
+
+      <AdSlot slotKey="list-top" className="mt-6" />
 
       <section className="mt-10">
         <h2 className="ui-section-title">Phân tích dữ liệu</h2>

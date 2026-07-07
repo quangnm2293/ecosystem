@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { ContentType } from '@/lib/supabase/enums';
 import { listPublishedContent } from '@/lib/content/service';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -38,6 +39,8 @@ export default async function ToolsIndexPage() {
       <p className="mt-2 text-muted-foreground">
         {implemented} công cụ sẵn sàng · Miễn phí · SEO-optimized
       </p>
+
+      <AdSlot slotKey="list-top" className="mt-6" />
 
       <Link href="/tools/tiktok-shop" className="ui-link-card mt-6 block border-primary/30 bg-primary/5">
         <span className="font-semibold text-primary">TikTok Shop Analytics (FastMoss-like)</span>

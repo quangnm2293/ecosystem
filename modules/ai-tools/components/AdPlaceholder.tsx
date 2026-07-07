@@ -1,30 +1,12 @@
-'use client';
+import { AdUnit } from '@/components/ads/AdUnit';
+import type { AdPlacementKey } from '@/lib/ads/config';
 
 type AdPlaceholderProps = {
-  slotKey: string;
+  slotKey: AdPlacementKey;
   className?: string;
 };
 
-/** Client-safe ad slot — production: swap với AdSense script */
+/** @deprecated Dùng AdUnit hoặc AdSlot — giữ prop slotKey cho ToolRunner. */
 export function AdPlaceholder({ slotKey, className }: AdPlaceholderProps) {
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
-    return (
-      <div className={className} data-ad-slot={slotKey}>
-        <ins
-          className="adsbygoogle block min-h-[90px] w-full"
-          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT}
-          data-ad-slot={slotKey}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`flex min-h-[90px] items-center justify-center rounded-lg border border-dashed border-border bg-surface-muted/80 text-xs text-muted ${className ?? ''}`}
-      data-ad-slot={slotKey}
-    >
-      Ad · {slotKey}
-    </div>
-  );
+  return <AdUnit placement={slotKey} className={className} />;
 }

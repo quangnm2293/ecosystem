@@ -1,26 +1,14 @@
+import { AdUnit } from '@/components/ads/AdUnit';
+import type { AdPlacementKey } from '@/lib/ads/config';
+
 type AdSlotProps = {
-  slotKey: string;
+  /** @deprecated dùng `placement` — giữ tương thích */
+  slotKey: AdPlacementKey;
+  placement?: AdPlacementKey;
   className?: string;
 };
 
-export function AdSlot({ slotKey, className }: AdSlotProps) {
-  if (process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
-    return (
-      <div className={className} data-ad-slot={slotKey}>
-        <ins
-          className="adsbygoogle block min-h-[90px] w-full"
-          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT}
-          data-ad-slot={slotKey}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className={className}>
-      <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border bg-surface-muted text-sm text-muted">
-        Ad · {slotKey}
-      </div>
-    </div>
-  );
+/** Server-safe wrapper — render AdUnit client component. */
+export function AdSlot({ slotKey, placement, className }: AdSlotProps) {
+  return <AdUnit placement={placement ?? slotKey} className={className} />;
 }

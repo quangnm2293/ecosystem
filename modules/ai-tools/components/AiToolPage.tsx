@@ -31,6 +31,10 @@ export function AiToolPage({ tool, contentId }: AiToolPageProps) {
       <h1 className="ui-page-title">{tool.name}</h1>
       <p className="mt-3 text-lg text-muted-foreground">{tool.description}</p>
 
+      <div className="mt-6">
+        <AdSlot slotKey="tool-top" />
+      </div>
+
       <div className="mt-8">
         <ToolRunner tool={toPublicTool(tool)} contentId={contentId} />
       </div>

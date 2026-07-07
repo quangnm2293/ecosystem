@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { ContentType } from '@/lib/supabase/enums';
 import { listPublishedContent } from '@/lib/content/service';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -24,6 +25,7 @@ export default async function BlogIndexPage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <span className="ui-badge">Blog</span>
       <h1 className="ui-page-title mt-2">Bài viết & Hướng dẫn</h1>
+      <AdSlot slotKey="list-top" className="mt-6" />
       <ul className="mt-8 space-y-6">
         {posts.map((post) => (
           <li key={post.id} className="ui-card p-5">

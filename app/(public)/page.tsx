@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { SITE_NAME } from '@/lib/config/site';
 import { VERTICALS } from '@/lib/routing/verticals';
 import { buildMetadata, buildWebSiteJsonLd } from '@/lib/seo/metadata';
@@ -30,6 +31,7 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto max-w-5xl px-4 py-12">
+        <AdSlot slotKey="home-mid" className="mb-8" />
         <div className="grid gap-4 sm:grid-cols-2">
           {VERTICALS.map((v) => (
             <Link key={v.basePath} href={v.basePath} className="ui-link-card group">
