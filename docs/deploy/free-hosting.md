@@ -14,16 +14,18 @@ Stack khuyên dùng (100% free tier):
 ## Bước 1 — Supabase (database)
 
 1. Tạo project mới tại [supabase.com/dashboard](https://supabase.com/dashboard)
-2. **SQL Editor** → chạy lần lượt:
+2. **SQL Editor** → chạy lần lượt (hoặc `pnpm run supabase:migrate` nếu có `DATABASE_URL`):
    - `supabase/migrations/001_ecosystem_schema.sql`
    - `supabase/migrations/002_rag_functions.sql`
-3. **Settings → API** → copy:
+   - `supabase/migrations/003_tiktok_trend_intelligence.sql` (Epic 31)
+3. **API Settings** → Exposed schemas → thêm `tiktok`
+4. **Settings → API** → copy:
    - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `service_role` → `SUPABASE_SERVICE_ROLE_KEY` (chỉ server, không public)
-4. **Authentication → Providers → Google** (optional):
+5. **Authentication → Providers → Google** (optional):
    - Redirect URL: `https://YOUR-DOMAIN.vercel.app/auth/callback`
-5. Seed dữ liệu (chạy local sau khi có `.env`):
+6. Seed dữ liệu (chạy local sau khi có `.env`):
 
 ```bash
 pnpm run supabase:seed
