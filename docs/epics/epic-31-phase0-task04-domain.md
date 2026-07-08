@@ -42,4 +42,4 @@ const product: Product = mapProduct(row);
 
 ## Next task
 
-Phase 0, Task 0.7 — Repositories trong `lib/trend-intelligence/repositories/`
+~~Phase 0, Task 0.7~~ → xem `epic-31-phase0-task07-repositories.md`
