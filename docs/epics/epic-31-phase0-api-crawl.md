@@ -40,7 +40,7 @@ curl -X POST http://localhost:3000/api/tiktok/internal/crawl/tick \
 1. `crawlRepository.claimNext()` — Postgres queue (`tiktok.crawl_jobs`)
 2. `getProductRank()` — FastMoss API → crawl → AI fallback
 3. `productIngestRepository.ingestRankedProducts()` — upsert products, metrics, daily ranking
-4. Vercel Cron mỗi 15 phút → `GET /api/tiktok/internal/crawl/tick`
+4. Vercel Cron daily (Hobby: 1 lần/ngày) → `GET /api/tiktok/internal/crawl/tick` (02:00 UTC)
 
 ## Env
 
