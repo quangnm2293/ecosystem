@@ -1,5 +1,7 @@
+export { alertRepository } from '@/lib/trend-intelligence/repositories/alert.repository';
 export { categoryRepository } from '@/lib/trend-intelligence/repositories/category.repository';
 export { crawlRepository } from '@/lib/trend-intelligence/repositories/crawl.repository';
+export { metricsDailyRepository } from '@/lib/trend-intelligence/repositories/metrics-daily.repository';
 export { productIngestRepository } from '@/lib/trend-intelligence/repositories/product-ingest.repository';
 export { productRepository } from '@/lib/trend-intelligence/repositories/product.repository';
 export type { ProductWithMetrics } from '@/lib/trend-intelligence/repositories/product.repository';

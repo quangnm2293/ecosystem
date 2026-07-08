@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { handleApiError, apiError } from '@/lib/trend-intelligence/api/errors';
 import { CrawlEnqueueBodySchema } from '@/lib/trend-intelligence/schemas/api';
-import { crawlRepository } from '@/lib/trend-intelligence/repositories/crawl.repository';
-import { enqueueDefaultCategoryCrawls } from '@/lib/trend-intelligence/workers/crawl-tick';
+import {
+  enqueueDefaultCategoryCrawls,
+  enqueueSeedCategoryCrawl,
+} from '@/lib/trend-intelligence/workers/crawl-tick';
 
 function assertWorkerSecret(secret: string) {
   const expected = process.env.CRAWL_WORKER_SECRET;
@@ -12,7 +14,7 @@ function assertWorkerSecret(secret: string) {
   return null;
 }
 
-/** POST /api/tiktok/internal/crawl/enqueue */
+/** POST /api/tiktok/internal/crawl/enqueue — crawl:product-rank from seed files */
 export async function POST(request: Request) {
   try {
     const body = CrawlEnqueueBodySchema.parse(await request.json());
@@ -20,20 +22,19 @@ export async function POST(request: Request) {
     if (authError) return authError;
 
     if (body.categorySlug === '*') {
-      const result = await enqueueDefaultCategoryCrawls(body.region);
-      return NextResponse.json(result);
+      const result = await enqueueDefaultCategoryCrawls();
+      return NextResponse.json({ region: 'VN', ...result });
     }
 
-    const job = await crawlRepository.enqueue({
-      source: 'fastmoss:product-rank',
-      params: {
-        region: body.region,
-        categorySlug: body.categorySlug,
-        period: body.period,
-      },
+    const job = await enqueueSeedCategoryCrawl({
+      categorySlug: body.categorySlug,
     });
 
-    return NextResponse.json({ enqueued: 1, jobs: [{ id: job.id, category: body.categorySlug }] });
+    return NextResponse.json({
+      region: 'VN',
+      enqueued: 1,
+      jobs: [{ id: job.id, category: job.category, productCount: job.productCount }],
+    });
   } catch (err) {
     return handleApiError(err);
   }

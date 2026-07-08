@@ -29,7 +29,7 @@ async function main() {
     process.exit(1);
   }
 
-  const filterPrefix = process.argv[2]?.trim();
+  const filterPrefix = process.argv.slice(2).find((a) => a !== '--')?.trim();
   const files = (await readdir(MIGRATIONS_DIR))
     .filter((f) => f.endsWith('.sql'))
     .sort();

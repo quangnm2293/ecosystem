@@ -54,14 +54,14 @@ Enum values unchanged: `BLOG`, `AI_TOOL`, `PAGE_VIEW`, etc.
 ### Phase 1 — Schema
 - [x] Run `supabase/migrations/001_ecosystem_schema.sql` in SQL Editor
 - [x] Run `supabase/migrations/002_rag_functions.sql`
-- [ ] Run `supabase/migrations/003_tiktok_trend_intelligence.sql` (Epic 31)
-- [ ] Expose schema `tiktok` in Dashboard → API Settings → Exposed schemas
-- [ ] Verify: `\dx vector` shows extension
+- [x] Run `supabase/migrations/003_tiktok_trend_intelligence.sql` (Epic 31)
+- [x] Run `supabase/migrations/004_expose_tiktok_schema.sql` (PostgREST + grants)
+- [x] Verify: `\dx vector` shows extension
 
 **CLI (cần `DATABASE_URL` trong `.env`):**
 ```bash
 pnpm run supabase:migrate          # all migrations
-pnpm run supabase:migrate -- 003   # Epic 31 only
+pnpm run supabase:migrate -- 004   # expose tiktok only
 ```
 
 ### Phase 2 — Export existing data (if any)

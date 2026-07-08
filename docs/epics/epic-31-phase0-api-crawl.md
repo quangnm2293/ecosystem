@@ -35,12 +35,16 @@ curl -X POST http://localhost:3000/api/tiktok/internal/crawl/tick \
   -d '{"secret":"YOUR_SECRET","limit":3}'
 ```
 
-## Worker flow
+## Worker flow (C1 crawl-first)
 
 1. `crawlRepository.claimNext()` — Postgres queue (`tiktok.crawl_jobs`)
-2. `getProductRank()` — FastMoss API → crawl → AI fallback
+2. Source `crawl:product-rank` — crawl seed PDP URLs (`data/tiktok-seeds/`)
 3. `productIngestRepository.ingestRankedProducts()` — upsert products, metrics, daily ranking
 4. Vercel Cron daily (Hobby: 1 lần/ngày) → `GET /api/tiktok/internal/crawl/tick` (02:00 UTC)
+
+```bash
+pnpm run tiktok:enqueue-seeds -- beauty --tick
+```
 
 ## Env
 
@@ -51,5 +55,16 @@ CRON_SECRET=...          # optional, Vercel auto-injects on Pro; Hobby dùng CRA
 
 ## Prerequisites
 
-- Schema `tiktok` exposed in Supabase API Settings
-- `CRAWL_WORKER_SECRET` set on Vercel
+- [x] Schema `tiktok` exposed (`004_expose_tiktok_schema.sql` + grants)
+- `CRAWL_WORKER_SECRET` set on Vercel / `.env`
+
+## UI
+
+| Path | Mô tả |
+|------|--------|
+| `/trends` | BXH theo category |
+| `/trends/products/[slug]` | Chi tiết SP + scores |
+
+## Next
+
+Lộ trình **tự crawl (không FastMoss):** `epic-31-self-crawl-roadmap.md` — bắt đầu Phase **C1** (crawl-first worker + seed URLs).

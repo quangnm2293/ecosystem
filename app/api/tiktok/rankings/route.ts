@@ -4,26 +4,25 @@ import {
   serializeRanking,
   serializeRankedProduct,
 } from '@/lib/trend-intelligence/api/serialize';
+import { SUPPORTED_REGION } from '@/lib/trend-intelligence/domain/value-objects/region';
 import { RankingsQuerySchema } from '@/lib/trend-intelligence/schemas/api';
 import {
   categoryRepository,
   rankingRepository,
 } from '@/lib/trend-intelligence';
-import type { Region } from '@/lib/trend-intelligence/domain/value-objects/region';
 
-/** GET /api/tiktok/rankings?region=VN&categorySlug=beauty&rankDate=2026-07-07 */
+/** GET /api/tiktok/rankings?categorySlug=beauty&rankDate=YYYY-MM-DD — Việt Nam only */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = RankingsQuerySchema.parse({
-      region: searchParams.get('region') ?? 'VN',
       categorySlug: searchParams.get('categorySlug') ?? undefined,
       rankDate: searchParams.get('rankDate') ?? undefined,
     });
 
     let categoryId: string | null | undefined = undefined;
     if (query.categorySlug) {
-      const cat = await categoryRepository.findBySlug(query.region as Region, query.categorySlug);
+      const cat = await categoryRepository.findBySlug(SUPPORTED_REGION, query.categorySlug);
       if (!cat) {
         return NextResponse.json({ error: 'Category not found' }, { status: 404 });
       }
@@ -33,17 +32,18 @@ export async function GET(request: Request) {
     }
 
     const ranking = await rankingRepository.findLatest({
-      region: query.region as Region,
+      region: SUPPORTED_REGION,
       categoryId,
       rankDate: query.rankDate,
     });
 
     if (!ranking) {
-      return NextResponse.json({ ranking: null, products: [] });
+      return NextResponse.json({ region: SUPPORTED_REGION, ranking: null, products: [] });
     }
 
     const products = await rankingRepository.listRankedProducts(ranking.id);
     return NextResponse.json({
+      region: SUPPORTED_REGION,
       ranking: serializeRanking(ranking),
       products: products.map(serializeRankedProduct),
     });

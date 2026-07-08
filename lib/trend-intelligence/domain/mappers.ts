@@ -1,5 +1,5 @@
+import { coerceRegion } from '@/lib/trend-intelligence/domain/value-objects/region';
 import { parseMoney } from '@/lib/trend-intelligence/domain/value-objects/money';
-import { parseRegion } from '@/lib/trend-intelligence/domain/value-objects/region';
 import { parseTrendScores } from '@/lib/trend-intelligence/domain/value-objects/scores';
 import { parseSlug } from '@/lib/trend-intelligence/domain/value-objects/slug';
 import type {
@@ -33,7 +33,7 @@ export function mapCategory(row: CategoryRow): Category {
     slug: parseSlug(row.slug),
     name: row.name,
     parentId: row.parent_id,
-    region: row.region ? parseRegion(row.region) : null,
+    region: row.region ? coerceRegion(row.region) : coerceRegion('VN'),
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -44,7 +44,7 @@ export function mapShop(row: ShopRow): Shop {
     id: row.id,
     tiktokId: row.tiktok_id,
     name: row.name,
-    region: parseRegion(row.region),
+    region: coerceRegion(row.region),
     metadata: row.metadata ?? {},
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -61,7 +61,7 @@ export function mapProduct(row: ProductRow): Product {
     productUrl: row.product_url,
     shopId: row.shop_id,
     categoryId: row.category_id,
-    region: parseRegion(row.region),
+    region: coerceRegion(row.region),
     price: parseMoney(row.price_amount, row.price_currency),
     commissionRate: row.commission_rate,
     commissionType: row.commission_type,
@@ -106,7 +106,7 @@ export function mapTrendRanking(row: TrendRankingRow): TrendRanking {
   return {
     id: row.id,
     rankDate: row.rank_date,
-    region: parseRegion(row.region),
+    region: coerceRegion(row.region),
     categoryId: row.category_id,
     publishedAt: new Date(row.published_at),
     createdAt: new Date(row.created_at),

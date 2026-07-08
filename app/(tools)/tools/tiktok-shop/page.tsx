@@ -50,6 +50,12 @@ export default function TikTokShopHubPage() {
 
       <AdSlot slotKey="list-top" className="mt-6" />
 
+      <p className="mt-6">
+        <Link href="/trends" className="text-primary underline">
+          Xem bảng xếp hạng Trends (Epic 31) →
+        </Link>
+      </p>
+
       <section className="mt-10">
         <h2 className="ui-section-title">Phân tích dữ liệu</h2>
         <ul className="mt-4 grid gap-4 sm:grid-cols-2">

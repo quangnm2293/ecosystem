@@ -1,0 +1,18 @@
+{
+  "region": "VN",
+  "shops": [
+    {
+      "categorySlug": "beauty",
+      "shopName": "Seed Beauty Shop",
+      "shopUrl": "https://www.tiktok.com/shop",
+      "maxProducts": 12
+    },
+    {
+      "categorySlug": "fashion",
+      "shopName": "Seed Fashion Shop",
+      "shopUrl": "https://www.tiktok.com/shop",
+      "maxProducts": 12
+    }
+  ],
+  "notes": "Thay shopUrl bằng link shop TikTok thật (storefront). Discovery crawl:shop-listing sẽ extract PDP URLs rồi enqueue crawl:product-rank."
+}

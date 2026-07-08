@@ -60,6 +60,16 @@ export const crawlRepository = {
     return claimed ? mapCrawlJob(claimed as CrawlJobRow) : null;
   },
 
+  async countPending(): Promise<number> {
+    const { count, error } = await getTiktokDb()
+      .from('crawl_jobs')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', TiktokCrawlStatus.PENDING);
+
+    if (error) throw error;
+    return count ?? 0;
+  },
+
   async markCompleted(id: string): Promise<void> {
     const { error } = await getTiktokDb()
       .from('crawl_jobs')
@@ -108,5 +118,59 @@ export const crawlRepository = {
     });
 
     if (error) throw error;
+  },
+
+  async listRecent(options: { status?: string; limit?: number } = {}): Promise<CrawlJob[]> {
+    let query = getTiktokDb()
+      .from('crawl_jobs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(options.limit ?? 50);
+
+    if (options.status) {
+      query = query.eq('status', options.status);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data as CrawlJobRow[]).map(mapCrawlJob);
+  },
+
+  async requeue(id: string): Promise<CrawlJob | null> {
+    const { data, error } = await getTiktokDb()
+      .from('crawl_jobs')
+      .update({
+        status: TiktokCrawlStatus.PENDING,
+        error_message: null,
+        started_at: null,
+        completed_at: null,
+        scheduled_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .in('status', [TiktokCrawlStatus.FAILED, TiktokCrawlStatus.COMPLETED])
+      .select('*')
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ? mapCrawlJob(data as CrawlJobRow) : null;
+  },
+
+  async countByStatus(): Promise<Record<string, number>> {
+    const statuses = [
+      TiktokCrawlStatus.PENDING,
+      TiktokCrawlStatus.RUNNING,
+      TiktokCrawlStatus.COMPLETED,
+      TiktokCrawlStatus.FAILED,
+    ];
+    const out: Record<string, number> = {};
+    for (const status of statuses) {
+      const { count, error } = await getTiktokDb()
+        .from('crawl_jobs')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', status);
+      if (error) throw error;
+      out[status] = count ?? 0;
+    }
+    return out;
   },
 };

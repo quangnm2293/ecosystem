@@ -16,6 +16,9 @@
     "supabase:seed": "pnpm exec tsx scripts/supabase-seed.ts",
     "supabase:migrate": "pnpm exec tsx scripts/apply-supabase-migrations.ts",
     "supabase:verify-tiktok": "pnpm exec tsx scripts/verify-tiktok-schema.ts",
+    "tiktok:enqueue-seeds": "pnpm exec tsx scripts/enqueue-tiktok-seeds.ts",
+    "tiktok:enqueue-shops": "pnpm exec tsx scripts/enqueue-tiktok-shops.ts",
+    "tiktok:validate-seeds": "pnpm exec tsx scripts/validate-tiktok-seeds.ts",
     "deploy:check": "bash scripts/deploy-check.sh"
   },
   "dependencies": {

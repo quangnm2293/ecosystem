@@ -1,7 +1,5 @@
 import type { ProductPageData } from '@/lib/scraper/product-url';
-
-const MOBILE_UA =
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+import { fetchHtmlWithBackoff } from '@/lib/scraper/fetch-with-backoff';
 
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_BYTES = 768_000;
@@ -113,61 +111,57 @@ function extractDiscount(html: string): string | null {
 }
 
 function buildPdpUrls(ref: TikTokShopRef): string[] {
-  const { productId, region } = ref;
-  const urls = [
-    `https://www.tiktok.com/shop/pdp/${productId}`,
+  const { productId } = ref;
+  // Chỉ crawl PDP Việt Nam
+  return [
     `https://www.tiktok.com/vn/pdp/${productId}`,
     `https://shop.tiktok.com/vn/pdp/${productId}`,
+    `https://www.tiktok.com/view/product/${productId}`,
+    `https://www.tiktok.com/shop/pdp/${productId}`,
   ];
-  if (region) {
-    urls.unshift(`https://www.tiktok.com/${region.toLowerCase()}/pdp/${productId}`);
-  }
-  return [...new Set(urls)];
 }
 
 async function fetchHtml(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const result = await fetchHtmlWithBackoff(url, {
+    timeoutMs: FETCH_TIMEOUT_MS,
+    maxBytes: MAX_BYTES,
+    maxAttempts: 3,
+  });
+  return result.html;
+}
 
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': MOBILE_UA,
-        Accept: 'text/html,application/xhtml+xml',
-        'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.8',
-      },
-      redirect: 'follow',
-    });
+/** Public helper for discovery / snapshot callers */
+export async function fetchTikTokHtml(url: string): Promise<{ html: string; finalUrl: string }> {
+  const result = await fetchHtmlWithBackoff(url, {
+    timeoutMs: FETCH_TIMEOUT_MS,
+    maxBytes: MAX_BYTES,
+    maxAttempts: 3,
+  });
+  return { html: result.html, finalUrl: result.url };
+}
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
+/** Extract product IDs / PDP URLs from a shop or listing HTML page */
+export function extractProductUrlsFromHtml(html: string, limit = 40): string[] {
+  const ids = new Set<string>();
+
+  const patterns = [
+    /\/view\/product\/(\d{10,25})/gi,
+    /\/(?:shop\/)?pdp\/(?:[^"'/\s]+\/)?(\d{10,25})/gi,
+    /\/([a-z]{2})\/pdp\/(?:[^"'/\s]+\/)?(\d{10,25})/gi,
+    /"product_id"\s*:\s*"(\d{10,25})"/gi,
+    /"productId"\s*:\s*"(\d{10,25})"/gi,
+  ];
+
+  for (const re of patterns) {
+    for (const m of html.matchAll(re)) {
+      const id = m[2] ?? m[1];
+      if (id) ids.add(id);
+      if (ids.size >= limit) break;
     }
-
-    const reader = res.body?.getReader();
-    if (!reader) throw new Error('No body');
-
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_BYTES) break;
-      chunks.push(value);
-    }
-
-    return new TextDecoder('utf-8', { fatal: false }).decode(
-      chunks.reduce((acc, c) => {
-        const merged = new Uint8Array(acc.length + c.length);
-        merged.set(acc);
-        merged.set(c, acc.length);
-        return merged;
-      }, new Uint8Array()),
-    );
-  } finally {
-    clearTimeout(timer);
+    if (ids.size >= limit) break;
   }
+
+  return [...ids].slice(0, limit).map((id) => `https://www.tiktok.com/view/product/${id}`);
 }
 
 function parseTikTokShopHtml(html: string, canonicalUrl: string): ProductPageData | null {

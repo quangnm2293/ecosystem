@@ -15,15 +15,7 @@ const REGION_FIELD: InputField = {
   name: 'region',
   label: 'Khu vực',
   type: 'select',
-  options: [
-    { label: 'Việt Nam', value: 'VN' },
-    { label: 'United States', value: 'US' },
-    { label: 'Thailand', value: 'TH' },
-    { label: 'Indonesia', value: 'ID' },
-    { label: 'Malaysia', value: 'MY' },
-    { label: 'Philippines', value: 'PH' },
-    { label: 'Toàn cầu', value: 'GLOBAL' },
-  ],
+  options: [{ label: 'Việt Nam', value: 'VN' }],
   defaultValue: 'VN',
 };
 

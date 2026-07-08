@@ -5,7 +5,12 @@ import {
   serializeProductWithMetrics,
   serializeWatchlistItem,
 } from '@/lib/trend-intelligence/api/serialize';
-import { WATCHLIST_LIMIT } from '@/lib/trend-intelligence/constants/tier-limits';
+import {
+  FREE_MUTATION_RATE_LIMIT_PER_HOUR,
+  WATCHLIST_LIMIT,
+} from '@/lib/trend-intelligence/constants/tier-limits';
+import { TiktokSubscriptionTier } from '@/lib/trend-intelligence/domain/enums';
+import { checkMutationRateLimit } from '@/lib/trend-intelligence/rate-limit';
 import {
   WatchlistAddBodySchema,
   WatchlistRemoveQuerySchema,
@@ -58,6 +63,16 @@ export async function POST(request: Request) {
     const items = await watchlistRepository.listItems(watchlist.id);
     const tier = await subscriptionRepository.getTierForUser(userOrRes.id);
     const limit = WATCHLIST_LIMIT[tier];
+
+    if (tier === TiktokSubscriptionTier.FREE) {
+      const rate = checkMutationRateLimit(
+        `watchlist:${userOrRes.id}`,
+        FREE_MUTATION_RATE_LIMIT_PER_HOUR,
+      );
+      if (!rate.allowed) {
+        return apiError(`Rate limit. Retry in ${rate.retryAfterSec}s`, 429);
+      }
+    }
 
     if (items.length >= limit && !items.some((i) => i.productId === body.productId)) {
       return apiError(`Watchlist limit reached (${limit})`, 403);

@@ -1,6 +1,7 @@
 export type DataSource = 'fastmoss-api' | 'crawl' | 'tiktok-oembed' | 'ai-estimate';
 
-export type TikTokRegion = 'VN' | 'US' | 'TH' | 'ID' | 'MY' | 'PH' | 'GB' | 'GLOBAL';
+/** TikTok tools trên platform chỉ hỗ trợ Việt Nam. */
+export type TikTokRegion = 'VN';
 
 export type RankPeriod = '1d' | '7d' | '30d';
 

@@ -43,13 +43,6 @@ import type {
 
 const REGION_LABELS: Record<TikTokRegion, string> = {
   VN: 'Việt Nam',
-  US: 'United States',
-  TH: 'Thailand',
-  ID: 'Indonesia',
-  MY: 'Malaysia',
-  PH: 'Philippines',
-  GB: 'United Kingdom',
-  GLOBAL: 'Toàn cầu',
 };
 
 async function llmEstimateList<T>(

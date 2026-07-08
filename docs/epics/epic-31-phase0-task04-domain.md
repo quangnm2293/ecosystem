@@ -2,7 +2,7 @@
 
 ## Scope
 
-TypeScript domain types + value objects cho schema `tiktok.*` — chưa có repository hay API.
+TypeScript domain types + value objects cho schema `tiktok.*` — **chỉ thị trường Việt Nam (`VN`)**.
 
 **Phụ thuộc:** Task 0.1 migration (`003_tiktok_trend_intelligence.sql`)
 

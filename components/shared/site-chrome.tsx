@@ -27,6 +27,9 @@ export function Header() {
                 {v.label}
               </Link>
             ))}
+            <Link href="/trends" className="site-header-link">
+              Trends
+            </Link>
           </nav>
           <ThemeToggle />
           <AuthNav />

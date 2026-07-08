@@ -159,7 +159,7 @@ export type Category = {
   slug: Slug;
   name: string;
   parentId: string | null;
-  region: Region | null;
+  region: Region;
   createdAt: Date;
   updatedAt: Date;
 };

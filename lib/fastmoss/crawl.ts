@@ -57,8 +57,8 @@ export async function crawlCreatorFromHandle(handle: string): Promise<CreatorPro
     handle: clean,
     displayName: clean,
     profileUrl: `https://www.tiktok.com/@${clean}`,
-    region: 'GLOBAL',
-    bio: 'Dữ liệu công khai hạn chế — dùng FastMoss API để có metrics đầy đủ.',
+    region: 'VN',
+    bio: 'Dữ liệu công khai hạn chế (thị trường Việt Nam).',
   };
 }
 
@@ -66,12 +66,8 @@ function extractHashtags(text: string): string[] {
   return [...text.matchAll(/#[\w\u00C0-\u024F\u1E00-\u1EFF]+/gi)].map((m) => m[0]);
 }
 
-function guessRegion(url: string): string {
-  if (/\.vn|shopee\.vn|tiktok\.com\/vi/i.test(url)) return 'VN';
-  if (/\.th|shopee\.co\.th/i.test(url)) return 'TH';
-  if (/\.id|tokopedia|shopee\.co\.id/i.test(url)) return 'ID';
-  if (/\.com\.my|shopee\.com\.my/i.test(url)) return 'MY';
-  return 'GLOBAL';
+function guessRegion(_url: string): string {
+  return 'VN';
 }
 
 export function buildProductRankFromPage(
